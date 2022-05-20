@@ -21,11 +21,18 @@ http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/
 	<flow name="databaseoperationsFlow" doc:id="d46cd0a5-a9b0-4065-9b5f-2f88f4ee15c6" >
 		<http:listener doc:name="Listener" doc:id="51a1b837-5df5-4b2b-8b82-8e30a26e1705" config-ref="HTTP_Listener_config" path="/data"/>
 		<logger level="INFO" doc:name="startlogger" doc:id="3c88d850-b1ab-4177-865c-80cab95a9e26" message="::::::::::::::::::::::::::::::::::::::::::::::::::::::::::#[payload]"/>
-		<db:select doc:name="Select" doc:id="c6fba485-599d-45c7-b0f2-07fdb71f6dbd" config-ref="Database_Config">
-			<db:sql ><![CDATA[SELECT
+		<try doc:name="Try" doc:id="18cd00a0-7895-4f56-9f5c-28615b19bdd3" >
+			<db:select doc:name="Select" doc:id="c6fba485-599d-45c7-b0f2-07fdb71f6dbd" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT
     * FROM PARTDETAILS WHERE PARTNAME= :partname]]></db:sql>
-			<db:input-parameters ><![CDATA[#[partname : payload.partname]]]></db:input-parameters>
+			<db:input-parameters><![CDATA[#[partname : payload.partname]]]></db:input-parameters>
 		</db:select>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c4c9aaec-70f1-4609-a540-d9d9d7f5141b" >
+					<logger level="INFO" doc:name="Logger" doc:id="727ad63e-1fe1-4815-a894-06d8362d02f6" message="continue the flow::::::::::::::::::::?"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
 		<ee:transform doc:name="Transform Message" doc:id="8b4aa490-d84b-44f2-b98c-7d23a981bc05" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
@@ -62,9 +69,24 @@ a map{
 }
 ]]></ee:set-payload>
 			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="dataweaveoutput" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-variable>
+			</ee:variables>
 		</ee:transform>
+		<set-payload value="#[vars.dataweaveoutput]" doc:name="Set Payload" doc:id="ed52564a-20c6-43f2-8b08-ca53ce5af14c" />
 		<logger level="INFO" doc:name="End_logger" doc:id="221de540-0e4f-49c7-b80e-a6883b3506a8" message="end logger::::::::::::::::::#[payload]"/>
-		<jms:publish doc:name="Publish" doc:id="06856e46-5567-4af5-b667-70e870393428" config-ref="JMS_Config" destination="T.FSD.EMP"/>
+		<try doc:name="Try" doc:id="0eef69ba-6e99-4a73-8c5a-988b6e63e3fb" >
+			<jms:publish doc:name="Publish" doc:id="06856e46-5567-4af5-b667-70e870393428" config-ref="JMS_Config" destination="T.FSD.EMP" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="a3b9cbd3-ced7-4d34-b957-b111a43791b6" >
+					<logger level="INFO" doc:name="logger" doc:id="5a38ae44-70ec-458e-97a1-b2906570906d" message="continue the flow::::::::::::::::::::?" />
+				</on-error-continue>
+			</error-handler>
+		</try>
 		<logger level="INFO" doc:name="Logger" doc:id="f67181b8-9127-43d7-8d0d-4e735127f6df" message="the message is published to the jms broker::::::::::the payload is:::::::::#[payload]"/>
 	</flow>
 	<flow name="databaseoperationsFlow1" doc:id="b927d742-22c8-4ffd-90dc-7c1e30846aa3" >
@@ -73,6 +95,6 @@ a map{
 				<jms:topic-consumer />
 			</jms:consumer-type>
 		</jms:listener>
-		<logger level="INFO" doc:name="Logger" doc:id="9340a906-cb56-4fe7-b559-2c2fc181cc22" message="AFTER CONSUMING THE PAYLOAD IS ::::::::::::::#[payload]"/>
+		<logger level="INFO" doc:name="End Logger" doc:id="9340a906-cb56-4fe7-b559-2c2fc181cc22" message="AFTER CONSUMING THE PAYLOAD IS ::::::::::::::#[payload]"/>
 	</flow>
 </mule>
