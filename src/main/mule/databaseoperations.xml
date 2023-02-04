@@ -88,6 +88,7 @@ output application/java
 			</error-handler>
 		</try>
 		<logger level="INFO" doc:name="Logger" doc:id="f67181b8-9127-43d7-8d0d-4e735127f6df" message="the message is published to the jms broker::::::::::the payload is:::::::::#[payload]"/>
+		<set-payload value='#["End of the Jms Publish and Consume Operations"]' doc:name="Set Payload" doc:id="d434bbe2-8f87-4d45-866f-5f38cf2a1831" />
 	</flow>
 	<flow name="databaseoperationsFlow1" doc:id="b927d742-22c8-4ffd-90dc-7c1e30846aa3" >
 		<jms:listener doc:name="On New Message" doc:id="24b828a8-7512-44e7-b6d9-746802544ebc" config-ref="JMS_Config" destination="T.FSD.EMP" ackMode="AUTO" numberOfConsumers="1">
